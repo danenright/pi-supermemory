@@ -1,0 +1,49 @@
+{
+  "name": "pi-supermemory",
+  "version": "0.1.0",
+  "description": "Persistent memory extension for Pi coding agent - remember context across sessions using SuperMemory",
+  "type": "module",
+  "main": "index.ts",
+  "files": [
+    "index.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "dependencies": {
+    "supermemory": "^4.0.0"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": ">=0.1.0",
+    "@sinclair/typebox": ">=0.32.0",
+    "@mariozechner/pi-ai": ">=0.1.0"
+  },
+  "keywords": [
+    "pi",
+    "pi-coding-agent",
+    "extension",
+    "memory",
+    "persistent-memory",
+    "supermemory",
+    "context",
+    "ai",
+    "agent"
+  ],
+  "author": "Dan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dan/pi-supermemory.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dan/pi-supermemory/issues"
+  },
+  "homepage": "https://github.com/dan/pi-supermemory#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
