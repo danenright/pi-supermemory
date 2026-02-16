@@ -2,6 +2,8 @@
 
 Persistent memory for [Pi](https://github.com/mariozechner/pi) - the AI coding agent that remembers context across sessions using [SuperMemory](https://supermemory.ai).
 
+**Note:** This extension is compatible with SuperMemory SDK v2. API parameters have changed from earlier versions (`containerTag` instead of `containerTags`, `limit` instead of `topK`, `q` instead of `context`, `forget` instead of `delete`).
+
 ## Overview
 
 This extension gives Pi long-term memory capabilities, allowing it to:
@@ -144,9 +146,11 @@ The LLM can call this tool with the following parameters:
   type?: MemoryType,     // For "add" mode
   scope?: "user" | "project",  // For "add", "search", "list" modes
   memoryId?: string,     // For "forget" mode
-  limit?: number         // For "search" or "list" modes
+  limit?: number         // For "search" and "list" modes
 }
 ```
+
+**Note:** The SuperMemory SDK v2 API uses `containerTag` (singular), `limit` (instead of `topK`), and `q` (instead of `context`). This extension has been updated to match the latest SDK.
 
 ### Example Tool Calls
 
@@ -158,13 +162,13 @@ The LLM can call this tool with the following parameters:
 { mode: "search", query: "database connection", scope: "project", limit: 5 }
 
 // View user profile
-{ mode: "profile" }
+{ mode: "profile", query: "coding preferences" }
 
 // List recent memories
 { mode: "list", scope: "project", limit: 10 }
 
-// Delete a memory
-{ mode: "forget", memoryId: "mem_abc123" }
+// Forget a memory
+{ mode: "forget", memoryId: "mem_abc123", scope: "project" }
 ```
 
 ## Architecture
