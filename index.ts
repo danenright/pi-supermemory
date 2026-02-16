@@ -13,7 +13,8 @@ type MemoryScope = "user" | "project";
 
 function getProjectTag(cwd: string): string {
 	// Create a tag from the project directory
-	const projectName = cwd.split("/").filter(Boolean).pop() || "default";
+	const safeCwd = cwd || process.cwd();
+	const projectName = safeCwd.split("/").filter(Boolean).pop() || "default";
 	return `${CONTAINER_PREFIX}_project_${projectName}`;
 }
 
@@ -109,9 +110,9 @@ export default function (pi: ExtensionAPI) {
 			const query = event.prompt.slice(0, 500); // Limit query length
 
 			const [profileResult, userMemoriesResult, projectMemoriesResult] = await Promise.all([
-				client.profile({ containerTags: [userTag], context: query }).catch(() => null),
-				client.search.memories({ q: query, containerTags: [userTag], topK: 5 }).catch(() => ({ results: [] })),
-				client.search.memories({ q: query, containerTags: [projectTag], topK: 10 }).catch(() => ({ results: [] })),
+				client.profile({ containerTag: userTag, q: query }).catch(() => null),
+				client.search.memories({ q: query, containerTag: userTag, limit: 5 }).catch(() => ({ results: [] })),
+				client.search.memories({ q: query, containerTag: projectTag, limit: 10 }).catch(() => ({ results: [] })),
 			]);
 
 			const profile = profileResult?.profile || null;
@@ -168,7 +169,7 @@ export default function (pi: ExtensionAPI) {
 			const projectTag = getProjectTag(ctx.cwd);
 			await client.add({
 				content: conversationText.slice(0, 10000), // Limit content size
-				containerTags: [projectTag],
+				containerTag: projectTag,
 				metadata: {
 					type: "conversation",
 					cwd: ctx.cwd,
@@ -224,7 +225,9 @@ Scopes:
 
 			const mode = params.mode || "help";
 			const userTag = getUserTag();
-			const projectTag = getProjectTag(ctx.cwd);
+			// Use safeCwd to handle cases where ctx.cwd might be undefined
+			const safeCwd = ctx?.cwd || process.cwd();
+			const projectTag = getProjectTag(safeCwd);
 
 			try {
 				switch (mode) {
@@ -263,7 +266,7 @@ Scopes:
 
 						const result = await client.add({
 							content: params.content,
-							containerTags: [containerTag],
+							containerTag,
 							metadata: {
 								type: params.type || "learned-pattern",
 								scope,
@@ -302,8 +305,8 @@ Scopes:
 						if (!scope || scope === "user") {
 							const userResults = await client.search.memories({
 								q: params.query,
-								containerTags: [userTag],
-								topK: limit,
+								containerTag: userTag,
+								limit,
 							});
 							results.push(...((userResults as any).results || []).map((r: any) => ({ ...r, scope: "user" })));
 						}
@@ -311,8 +314,8 @@ Scopes:
 						if (!scope || scope === "project") {
 							const projectResults = await client.search.memories({
 								q: params.query,
-								containerTags: [projectTag],
-								topK: limit,
+								containerTag: projectTag,
+								limit,
 							});
 							results.push(...((projectResults as any).results || []).map((r: any) => ({ ...r, scope: "project" })));
 						}
@@ -341,8 +344,8 @@ Scopes:
 
 					case "profile": {
 						const result = await client.profile({
-							containerTags: [userTag],
-							context: params.query,
+							containerTag: userTag,
+							q: params.query,
 						});
 
 						return {
@@ -364,12 +367,14 @@ Scopes:
 						const limit = params.limit || 20;
 						const containerTag = scope === "user" ? userTag : projectTag;
 
-						const result = await client.memories.list({
+						const result = await client.documents.list({
 							containerTags: [containerTag],
 							limit,
+							sort: "createdAt",
+							order: "desc",
 						});
 
-						const memories = (result as any).memories || [];
+						const documents = (result as any).documents || [];
 
 						return {
 							content: [{
@@ -377,12 +382,12 @@ Scopes:
 								text: JSON.stringify({
 									success: true,
 									scope,
-									count: memories.length,
-									memories: memories.map((m: any) => ({
-										id: m.id,
-										content: m.summary || m.content,
-										createdAt: m.createdAt,
-										metadata: m.metadata,
+									count: documents.length,
+									memories: documents.map((d: any) => ({
+										id: d.id,
+										content: d.content,
+										createdAt: d.createdAt,
+										metadata: d.metadata,
 									})),
 								}, null, 2),
 							}],
@@ -397,14 +402,21 @@ Scopes:
 							};
 						}
 
-						await client.memories.delete(params.memoryId);
+						// Use forget (soft delete) with containerTag and memory id
+						const scope = params.scope || "project";
+						const containerTag = scope === "user" ? userTag : projectTag;
+						await client.memories.forget({
+							containerTag: containerTag,
+							id: params.memoryId,
+						});
 
 						return {
 							content: [{
 								type: "text",
 								text: JSON.stringify({
 									success: true,
-									message: `Memory ${params.memoryId} deleted`,
+									message: `Memory ${params.memoryId} forgotten from ${scope} scope`,
+									scope: scope,
 								}, null, 2),
 							}],
 						};
@@ -446,7 +458,7 @@ Scopes:
 				const projectTag = getProjectTag(ctx.cwd);
 				await client.add({
 					content: args,
-					containerTags: [projectTag],
+					containerTag: projectTag,
 					metadata: {
 						type: "learned-pattern",
 						scope: "project",
@@ -479,8 +491,8 @@ Scopes:
 				const projectTag = getProjectTag(ctx.cwd);
 
 				const [userResults, projectResults] = await Promise.all([
-					client.search.memories({ q: args, containerTags: [userTag], topK: 5 }),
-					client.search.memories({ q: args, containerTags: [projectTag], topK: 5 }),
+					client.search.memories({ q: args, containerTag: userTag, limit: 5 }),
+					client.search.memories({ q: args, containerTag: projectTag, limit: 5 }),
 				]);
 
 				const allResults = [
@@ -515,8 +527,8 @@ Scopes:
 			try {
 				const userTag = getUserTag();
 				const result = await client.profile({
-					containerTags: [userTag],
-					context: args || undefined,
+					containerTag: userTag,
+					q: args || undefined,
 				});
 
 				const staticFacts = result.profile?.static || [];
