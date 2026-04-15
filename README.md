@@ -61,7 +61,7 @@ Conversations are automatically stored (when substantial) for future reference.
 cd ~/.pi/agent/extensions/
 
 # Clone or copy this extension
-git clone https://github.com/dan/pi-supermemory.git supermemory
+git clone https://github.com/danenright/pi-supermemory.git supermemory
 
 # Install dependencies
 cd supermemory
@@ -187,7 +187,7 @@ The extension works by:
 
 ```bash
 # Clone the repo
-git clone https://github.com/dan/pi-supermemory.git
+git clone https://github.com/danenright/pi-supermemory.git
 cd pi-supermemory
 
 # Install dependencies

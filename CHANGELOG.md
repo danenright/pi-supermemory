@@ -17,4 +17,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memory types: preference, project-config, architecture, error-solution, learned-pattern, conversation
 - Status indicator (🧠) when extension is active
 
-[0.1.0]: https://github.com/dan/pi-supermemory/releases/tag/v0.1.0
+[0.1.0]: https://github.com/danenright/pi-supermemory/releases/tag/v0.1.0

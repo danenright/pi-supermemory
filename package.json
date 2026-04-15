@@ -37,12 +37,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dan/pi-supermemory.git"
+    "url": "git+https://github.com/danenright/pi-supermemory.git"
   },
   "bugs": {
-    "url": "https://github.com/dan/pi-supermemory/issues"
+    "url": "https://github.com/danenright/pi-supermemory/issues"
   },
-  "homepage": "https://github.com/dan/pi-supermemory#readme",
+  "homepage": "https://github.com/danenright/pi-supermemory#readme",
   "engines": {
     "node": ">=18.0.0"
   }
